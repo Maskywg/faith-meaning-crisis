@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>沒有信仰真的弊大於利嗎？— 深度學習筆記</title>
+<style>
+  :root {
+    --bg: #fdf0ec;
+    --bg2: #fce8e2;
+    --surface: #fff8f6;
+    --surface2: #fdeee9;
+    --border: #f0c8be;
+    --text: #3a2420;
+    --text-muted: #9a6560;
+    --atheist: #c04040;
+    --christian: #3878b8;
+    --psychiatrist: #2a8a5a;
+    --accent: #c05888;
+    --gold: #b07030;
+    --peach: #f4a080;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'PingFang TC', 'Noto Sans TC', sans-serif;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    overflow: hidden;
+    height: 380px;
+    background: linear-gradient(160deg, #fce4dc 0%, #fad0c8 40%, #f8c0b8 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  /* 3D floating orbs */
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    animation: floatOrb linear infinite;
+    pointer-events: none;
+    filter: blur(0px);
+  }
+
+  @keyframes floatOrb {
+    0%   { transform: translateY(0px) translateX(0px) rotateZ(0deg); }
+    25%  { transform: translateY(-18px) translateX(10px) rotateZ(90deg); }
+    50%  { transform: translateY(-8px) translateX(-8px) rotateZ(180deg); }
+    75%  { transform: translateY(-22px) translateX(6px) rotateZ(270deg); }
+    100% { transform: translateY(0px) translateX(0px) rotateZ(360deg); }
+  }
+
+  /* Triangle 3D scene */
+  #hero-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 10;
+  }
+
+  .hero h1 {
+    font-size: clamp(1.15rem, 2.8vw, 1.75rem);
+    font-weight: 800;
+    color: #6a1a10;
+    line-height: 1.4;
+    text-shadow: 0 2px 12px rgba(200,80,40,0.18);
+    margin-bottom: 0.6rem;
+  }
+
+  .hero p {
+    color: #a05040;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  .speaker-badges {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    padding: 0.35rem 1rem;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    border: 2px solid;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5);
+  }
+
+  .badge.a {
+    color: var(--atheist);
+    border-color: var(--atheist);
+    background: rgba(255,220,216,0.7);
+  }
+  .badge.c {
+    color: var(--christian);
+    border-color: var(--christian);
+    background: rgba(216,228,255,0.7);
+  }
+  .badge.p {
+    color: var(--psychiatrist);
+    border-color: var(--psychiatrist);
+    background: rgba(216,248,232,0.7);
+  }
+
+  /* Main layout */
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr 370px;
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 900px) {
+    .container { grid-template-columns: 1fr; }
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(180,80,40,0.07), 0 1px 4px rgba(180,80,40,0.06);
+  }
+
+  /* Video */
+  .video-wrapper {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+  }
+
+  .video-wrapper iframe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border: none;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    border-bottom: 1.5px solid var(--border);
+    background: var(--surface2);
+    overflow-x: auto;
+  }
+
+  .tab-btn {
+    padding: 0.7rem 1.1rem;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    cursor: pointer;
+    border-bottom: 2.5px solid transparent;
+    transition: all 0.2s;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    font-weight: 700;
+  }
+
+  .tab-content { display: none; padding: 1.4rem; }
+  .tab-content.active { display: block; }
+
+  /* Perspectives */
+  .perspectives {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.9rem;
+    margin-bottom: 1.2rem;
+  }
+
+  @media (max-width: 680px) {
+    .perspectives { grid-template-columns: 1fr; }
+  }
+
+  .pcard {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 0.9rem;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+  }
+
+  .pcard h3 {
+    font-size: 0.9rem;
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid;
+  }
+
+  .pcard.a h3 { color: var(--atheist); border-color: var(--atheist); }
+  .pcard.c h3 { color: var(--christian); border-color: var(--christian); }
+  .pcard.p h3 { color: var(--psychiatrist); border-color: var(--psychiatrist); }
+
+  .pcard ul { list-style: none; padding: 0; }
+  .pcard li {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    padding: 0.28rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    display: flex;
+    gap: 0.35rem;
+    align-items: flex-start;
+  }
+  .pcard li::before { content: '·'; flex-shrink: 0; color: var(--peach); }
+
+  /* Questions */
+  .questions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem;
+    margin-top: 0.75rem;
+  }
+
+  @media (max-width: 600px) { .questions-grid { grid-template-columns: 1fr; } }
+
+  .q-card {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-left: 3px solid var(--peach);
+    border-radius: 10px;
+    padding: 0.8rem 0.9rem;
+    font-size: 0.84rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(180,80,40,0.04);
+  }
+
+  .q-card:hover {
+    border-left-color: var(--accent);
+    color: var(--text);
+    background: #fff0ec;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(180,80,40,0.1);
+  }
+
+  .q-card .q-num {
+    font-size: 0.7rem;
+    color: var(--accent);
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* Overview extras */
+  .highlight-box {
+    background: linear-gradient(135deg, rgba(192,88,136,0.08), rgba(176,112,48,0.08));
+    border: 1.5px solid rgba(192,88,136,0.25);
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    margin-top: 1rem;
+    box-shadow: 0 2px 10px rgba(192,88,136,0.06);
+  }
+
+  .highlight-box .hl-label {
+    font-size: 0.72rem;
+    color: var(--accent);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+  }
+
+  .highlight-box p {
+    font-size: 0.87rem;
+    color: var(--text);
+    line-height: 1.7;
+    font-style: italic;
+  }
+
+  .tension-item { margin-bottom: 0.9rem; }
+
+  .tension-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .tension-bar {
+    height: 7px;
+    background: var(--surface2);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .tension-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1.2s ease;
+  }
+
+  .points-list li {
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    padding: 0.55rem 0.75rem;
+    background: var(--surface2);
+    border-radius: 8px;
+    margin-bottom: 0.45rem;
+    border-left: 3px solid var(--peach);
+    list-style: none;
+  }
+
+  /* Mind map */
+  #mindmap {
+    width: 100%;
+    height: 340px;
+    border-radius: 10px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    cursor: grab;
+  }
+
+  /* Sidebar */
+  .sidebar { display: flex; flex-direction: column; gap: 1.25rem; }
+
+  .panel {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 1.2rem;
+    box-shadow: 0 4px 24px rgba(180,80,40,0.06);
+  }
+
+  .panel h2 {
+    font-size: 0.95rem;
+    margin-bottom: 0.85rem;
+    color: var(--gold);
+    font-weight: 800;
+  }
+
+  /* Notes */
+  #notes-area {
+    width: 100%;
+    min-height: 180px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 0.85rem;
+    color: var(--text);
+    font-family: 'PingFang TC', sans-serif;
+    font-size: 0.87rem;
+    line-height: 1.7;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  #notes-area:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(192,88,136,0.1); }
+
+  .notes-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.7rem;
+  }
+
+  .btn {
+    padding: 0.42rem 0.9rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  .btn:hover { background: var(--bg2); color: var(--text); }
+  .btn.primary { border-color: var(--accent); color: var(--accent); }
+  .btn.primary:hover { background: rgba(192,88,136,0.1); }
+
+  /* Stance */
+  .stance-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.5rem;
+    margin-top: 0.7rem;
+  }
+
+  .stance-btn {
+    padding: 0.6rem 0.4rem;
+    border-radius: 10px;
+    border: 2px solid;
+    background: none;
+    font-size: 0.78rem;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    text-align: center;
+    line-height: 1.4;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+
+  .stance-btn.a { color: var(--atheist); border-color: var(--atheist); }
+  .stance-btn.c { color: var(--christian); border-color: var(--christian); }
+  .stance-btn.p { color: var(--psychiatrist); border-color: var(--psychiatrist); }
+
+  .stance-btn.selected.a { background: rgba(192,64,64,0.1); }
+  .stance-btn.selected.c { background: rgba(56,120,184,0.1); }
+  .stance-btn.selected.p { background: rgba(42,138,90,0.1); }
+
+  .stance-result {
+    margin-top: 0.7rem;
+    font-size: 0.83rem;
+    color: var(--text-muted);
+    display: none;
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 0.7rem;
+    line-height: 1.6;
+    border-left: 3px solid var(--peach);
+  }
+
+  /* Concepts */
+  .concept-item {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 0.7rem 0.85rem;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .concept-item:hover { border-color: var(--peach); }
+
+  .concept-item .term {
+    font-size: 0.87rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.25rem;
+  }
+
+  .concept-item .def {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: none;
+    line-height: 1.6;
+    margin-top: 0.3rem;
+    padding-top: 0.3rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .concept-item.open .def { display: block; }
+
+  .section-title {
+    font-size: 0.73rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    margin-bottom: 0.7rem;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO with 3D canvas -->
+<div class="hero">
+  <canvas id="hero-canvas"></canvas>
+
+  <!-- Floating orbs -->
+  <div class="orb" style="width:120px;height:120px;left:-30px;top:20px;animation-duration:8s;background:radial-gradient(circle at 35% 35%, #ffd4cc, #f4a090 60%, #e88070);box-shadow:inset -8px -8px 20px rgba(0,0,0,0.12), inset 4px 4px 12px rgba(255,255,255,0.5), 0 8px 32px rgba(230,100,70,0.3);"></div>
+  <div class="orb" style="width:80px;height:80px;right:60px;top:30px;animation-duration:11s;animation-delay:-3s;background:radial-gradient(circle at 35% 35%, #dce8ff, #90b8e8 60%, #6890d0);box-shadow:inset -6px -6px 16px rgba(0,0,0,0.12), inset 3px 3px 10px rgba(255,255,255,0.5), 0 6px 24px rgba(80,120,200,0.25);"></div>
+  <div class="orb" style="width:60px;height:60px;right:180px;bottom:30px;animation-duration:9s;animation-delay:-6s;background:radial-gradient(circle at 35% 35%, #d0f4e4, #80c8a0 60%, #50a878);box-shadow:inset -5px -5px 12px rgba(0,0,0,0.1), inset 2px 2px 8px rgba(255,255,255,0.4), 0 5px 18px rgba(60,160,100,0.22);"></div>
+  <div class="orb" style="width:40px;height:40px;left:200px;bottom:50px;animation-duration:13s;animation-delay:-2s;background:radial-gradient(circle at 35% 35%, #fff0e0, #f0c080 60%, #d8a050);box-shadow:inset -4px -4px 10px rgba(0,0,0,0.1), inset 2px 2px 6px rgba(255,255,255,0.4), 0 4px 14px rgba(200,140,40,0.2);"></div>
+  <div class="orb" style="width:28px;height:28px;left:380px;top:50px;animation-duration:7s;animation-delay:-4s;background:radial-gradient(circle at 35% 35%, #fce0f0, #e898c0 60%, #d070a0);box-shadow:inset -3px -3px 8px rgba(0,0,0,0.1), inset 1px 1px 5px rgba(255,255,255,0.5), 0 3px 12px rgba(200,80,140,0.2);"></div>
+
+  <div class="hero-content">
+    <h1>沒有信仰真的弊大於利嗎？<br>為何我們需要一種虛幻的永恆感？</h1>
+    <p>深度拆解現代人的意義危機 · 三方對談學習筆記</p>
+    <div class="speaker-badges">
+      <span class="badge a">🔴 無神論者</span>
+      <span class="badge c">🔵 基督徒</span>
+      <span class="badge p">🟢 精神科醫師</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Left -->
+  <div>
+    <div class="card" style="margin-bottom:1.5rem;">
+      <div class="video-wrapper">
+        <iframe src="https://www.youtube.com/embed/V0nBLYfkMSY"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen></iframe>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('overview')">概覽</button>
+        <button class="tab-btn" onclick="switchTab('perspectives')">三方立場</button>
+        <button class="tab-btn" onclick="switchTab('questions')">核心問題</button>
+        <button class="tab-btn" onclick="switchTab('mindmap')">思維導圖</button>
+      </div>
+
+      <!-- Overview -->
+      <div id="tab-overview" class="tab-content active">
+        <div class="section-title">核心辯題</div>
+        <div class="highlight-box">
+          <div class="hl-label">中心張力</div>
+          <p>信仰（無論是否真實）是否提供了人類無可取代的「意義感」與「永恆感」？若科學已能解釋一切，人類還需要信仰嗎？</p>
+        </div>
+
+        <div style="margin-top:1.2rem;">
+          <div class="section-title">議題張力光譜</div>
+          <div class="tension-item">
+            <div class="tension-label">
+              <span style="color:var(--atheist)">理性主義 / 科學解釋</span>
+              <span style="color:var(--christian)">信仰 / 靈性體驗</span>
+            </div>
+            <div class="tension-bar">
+              <div class="tension-fill" style="width:50%;background:linear-gradient(90deg,#e07060,#6098d8);"></div>
+            </div>
+          </div>
+          <div class="tension-item">
+            <div class="tension-label">
+              <span style="color:var(--atheist)">個人自主 / 存在主義</span>
+              <span style="color:var(--psychiatrist)">心理依附 / 社群歸屬</span>
+            </div>
+            <div class="tension-bar">
+              <div class="tension-fill" style="width:60%;background:linear-gradient(90deg,#e07060,#50a878);"></div>
+            </div>
+          </div>
+          <div class="tension-item">
+            <div class="tension-label">
+              <span style="color:var(--psychiatrist)">心理健康效益</span>
+              <span style="color:var(--atheist)">認識論誠實</span>
+            </div>
+            <div class="tension-bar">
+              <div class="tension-fill" style="width:45%;background:linear-gradient(90deg,#50a878,#e07060);"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:1.2rem;">
+          <div class="section-title">為何值得深思</div>
+          <ul class="points-list">
+            <li>📊 信仰者在憂鬱、焦慮、自殺率上普遍低於無信仰者——數據是否說明信仰的功能性必要？</li>
+            <li>🧠 精神醫學視角：「意義感」是大腦的需求，不一定需要「真實的神」來滿足</li>
+            <li>⚖️ 即使信仰是「虛幻的」，若它帶來真實的益處，拋棄它是否是一種奢侈？</li>
+            <li>🌍 現代意義危機：後宗教時代，人類如何建構死亡焦慮的緩衝？</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Perspectives -->
+      <div id="tab-perspectives" class="tab-content">
+        <div class="perspectives">
+          <div class="pcard a">
+            <h3>🔴 無神論者</h3>
+            <ul>
+              <li>神不存在，信仰是認識論錯誤</li>
+              <li>面對虛無才是誠實的存在方式</li>
+              <li>科學與哲學可取代信仰的功能</li>
+              <li>信仰可能引發群體歧視</li>
+              <li>人類可在無神情況下建立道德</li>
+              <li>「有益的謊言」在認識論上不可接受</li>
+            </ul>
+          </div>
+          <div class="pcard c">
+            <h3>🔵 基督徒</h3>
+            <ul>
+              <li>神的存在可被論證</li>
+              <li>信仰提供客觀道德基礎</li>
+              <li>復活信仰賦予死亡超越意義</li>
+              <li>信仰社群提供真實歸屬</li>
+              <li>靈性體驗無法化約為神經科學</li>
+              <li>不信仰才是損失最大的賭注</li>
+            </ul>
+          </div>
+          <div class="pcard p">
+            <h3>🟢 精神科醫師</h3>
+            <ul>
+              <li>信仰功能可與真實性分離討論</li>
+              <li>意義感是大腦的基本需求</li>
+              <li>宗教提供死亡焦慮緩衝機制</li>
+              <li>信仰社群是強力保護性因子</li>
+              <li>儀式與敘事在治療中有效益</li>
+              <li>失去信仰可能引發存在危機</li>
+            </ul>
+          </div>
+        </div>
+        <div class="highlight-box">
+          <div class="hl-label">三方共識</div>
+          <p>無論信仰是否真實，「意義感」、「連結感」與「對死亡的回應方式」是人類不可迴避的核心需求。問題在於：<strong>我們能否在沒有信仰的情況下，找到功能等效的替代？</strong></p>
+        </div>
+      </div>
+
+      <!-- Questions -->
+      <div id="tab-questions" class="tab-content">
+        <div class="section-title">觀影時值得思考的核心問題（點擊加入筆記）</div>
+        <div class="questions-grid">
+          <div class="q-card" onclick="addToNotes(this)">
+            <div class="q-num">Q1 · 功能論</div>
+            若信仰帶來心理健康效益，但建立在虛幻的前提上，這樣的信仰是否仍然值得擁有？
+          </div>
+          <div class="q-card" onclick="addToNotes(this)">
+            <div class="q-num">Q2 · 認識論</div>
+            無神論者是否對自己承受著更高的「存在誠實成本」？這是美德還是不必要的苦難？
+          </div>
+          <div class="q-card" onclick="addToNotes(this)">
+            <div class="q-num">Q3 · 替代方案</div>
+            後宗教時代，哲學、藝術、自然、人際關係能否真正取代信仰的意義功能？
+          </div>
+          <div class="q-card" onclick="addToNotes(this)">
+            <div class="q-num">Q4 · 死亡焦慮</div>
+            面對死亡，無神論者如何建構意義？「消失」是否比「永生」更難以接受？
+          </div>
+          <div class="q-card" onclick="addToNotes(this)">
+            <div class="q-num">Q5 · 社會學</div>
+            信仰社群所提供的社會支持網絡，世俗社會能複製嗎？
+          </div>
+          <div class="q-card" onclick="addToNotes(this)">
+            <div class="q-num">Q6 · 帕斯卡賭注</div>
+            「若神存在，信仰無損失；若不存在，也只是虛度信仰時光」——這個論證有說服力嗎？
+          </div>
+          <div class="q-card" onclick="addToNotes(this)">
+            <div class="q-num">Q7 · 自由意志</div>
+            我們能選擇「相信」嗎？信仰是選擇、習慣、還是體驗的結果？
+          </div>
+          <div class="q-card" onclick="addToNotes(this)">
+            <div class="q-num">Q8 · 精神科角度</div>
+            精神科醫師的視角是否本質上將信仰「工具化」？這是否對信仰者不尊重？
+          </div>
+        </div>
+      </div>
+
+      <!-- Mind Map -->
+      <div id="tab-mindmap" class="tab-content">
+        <canvas id="mindmap"></canvas>
+        <p style="font-size:0.75rem;color:var(--text-muted);text-align:center;margin-top:0.5rem;">概念關係圖</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+
+    <div class="panel">
+      <h2>🤔 我的立場</h2>
+      <p style="font-size:0.83rem;color:var(--text-muted);">觀影前後，你比較認同哪個視角？</p>
+      <div class="stance-btns">
+        <button class="stance-btn a" onclick="selectStance('a',this)">無神論<br>理性優先</button>
+        <button class="stance-btn c" onclick="selectStance('c',this)">基督徒<br>信仰優先</button>
+        <button class="stance-btn p" onclick="selectStance('p',this)">精神醫學<br>功能優先</button>
+      </div>
+      <div id="stance-result" class="stance-result"></div>
+    </div>
+
+    <div class="panel">
+      <h2>✏️ 思考筆記</h2>
+      <textarea id="notes-area" placeholder="在這裡記下你的想法、問題、反駁……
+
+點擊「核心問題」中的卡片可快速加入。
+
+📝 提示：
+• 哪個論點最觸動你？
+• 你不同意哪一方的論點？
+• 這對你個人的信仰觀有何影響？"></textarea>
+      <div class="notes-actions">
+        <button class="btn primary" onclick="saveNotes()">💾 儲存</button>
+        <button class="btn" onclick="clearNotes()">清除</button>
+        <button class="btn" onclick="copyNotes()">複製</button>
+      </div>
+      <div id="notes-msg" style="font-size:0.76rem;color:var(--psychiatrist);margin-top:0.35rem;display:none;">✓ 已儲存至本地</div>
+    </div>
+
+    <div class="panel">
+      <h2>📖 核心概念</h2>
+      <div class="concept-item" onclick="toggleConcept(this)">
+        <div class="term">意義危機 (Meaning Crisis)</div>
+        <div class="def">後現代社會中，傳統宗教、神話、意識形態崩解後，個體失去意義感的普遍現象。哲學家 John Vervaeke 稱之為「第三次認知革命的陰影」。</div>
+      </div>
+      <div class="concept-item" onclick="toggleConcept(this)">
+        <div class="term">恐懼管理理論 (TMT)</div>
+        <div class="def">Terror Management Theory：人類文化活動（含宗教）是為了管理對死亡的根本焦慮。信仰提供「象徵性不朽」作為防禦機制。</div>
+      </div>
+      <div class="concept-item" onclick="toggleConcept(this)">
+        <div class="term">帕斯卡賭注</div>
+        <div class="def">Blaise Pascal 的論證：若神存在且你相信，你獲得無限；若神不存在，你只損失有限。批評：此論證適用於所有宗教，無法區分哪個是真的。</div>
+      </div>
+      <div class="concept-item" onclick="toggleConcept(this)">
+        <div class="term">存在主義 (Existentialism)</div>
+        <div class="def">薩特、卡謬認為宇宙本無意義，人類必須自行創造意義。面對荒謬是誠實的，但需要極大的心理強度。</div>
+      </div>
+      <div class="concept-item" onclick="toggleConcept(this)">
+        <div class="term">功能主義宗教觀</div>
+        <div class="def">不問宗教是否為真，只問其功能：提供意義、社群、道德框架、死亡焦慮緩衝。社會學家涂爾幹的視角，精神科醫師往往採此立場。</div>
+      </div>
+      <div class="concept-item" onclick="toggleConcept(this)">
+        <div class="term">認識論誠實</div>
+        <div class="def">無神論者強調：接受自己「不知道」的狀態，比接受一個讓人感覺更好但缺乏充分理由的信仰更誠實，即使代價是更大的存在焦慮。</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── 3D Hero Canvas ──
+(function() {
+  const canvas = document.getElementById('hero-canvas');
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // 3D rotating triangle / tetrahedron projection
+  const vertices3D = [
+    [0, -1, 0],
+    [Math.sin(2*Math.PI/3), 0.33, Math.cos(2*Math.PI/3)],
+    [Math.sin(4*Math.PI/3), 0.33, Math.cos(4*Math.PI/3)],
+    [Math.sin(0), 0.33, Math.cos(0)],
+  ];
+
+  const edges = [
+    [0,1],[0,2],[0,3],[1,2],[2,3],[3,1]
+  ];
+
+  const faceColors = [
+    'rgba(192,64,64,0.13)',
+    'rgba(56,120,184,0.13)',
+    'rgba(42,138,90,0.13)',
+    'rgba(192,88,136,0.1)',
+  ];
+
+  const faces = [[0,1,2],[0,2,3],[0,3,1],[1,3,2]];
+
+  let angle = 0;
+
+  function project(v, cx, cy, scale) {
+    const cosA = Math.cos(angle * 0.7);
+    const sinA = Math.sin(angle * 0.7);
+    const cosB = Math.cos(angle * 0.4);
+    const sinB = Math.sin(angle * 0.4);
+
+    // Rotate Y
+    let x = v[0] * cosA - v[2] * sinA;
+    let z = v[0] * sinA + v[2] * cosA;
+    let y = v[1];
+
+    // Rotate X
+    let y2 = y * cosB - z * sinB;
+    let z2 = y * sinB + z * cosB;
+
+    const fov = 3;
+    const pz = z2 + fov;
+    const px = cx + (x / pz) * scale;
+    const py = cy + (y2 / pz) * scale;
+    return [px, py, pz];
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const cx = canvas.width * 0.72;
+    const cy = canvas.height * 0.5;
+    const scale = Math.min(canvas.width, canvas.height) * 0.28;
+
+    // Draw faces
+    faces.forEach((face, fi) => {
+      const pts = face.map(i => project(vertices3D[i], cx, cy, scale));
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0], pts[0][1]);
+      ctx.lineTo(pts[1][0], pts[1][1]);
+      ctx.lineTo(pts[2][0], pts[2][1]);
+      ctx.closePath();
+      ctx.fillStyle = faceColors[fi];
+      ctx.fill();
+    });
+
+    // Draw edges
+    edges.forEach(([a, b]) => {
+      const pa = project(vertices3D[a], cx, cy, scale);
+      const pb = project(vertices3D[b], cx, cy, scale);
+      ctx.beginPath();
+      ctx.moveTo(pa[0], pa[1]);
+      ctx.lineTo(pb[0], pb[1]);
+      ctx.strokeStyle = 'rgba(180,100,60,0.25)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
+
+    // Draw vertex dots
+    const labels = ['', '無神論', '基督徒', '精神醫學'];
+    const dotColors = ['#c88060', '#c04040', '#3878b8', '#2a8a5a'];
+    vertices3D.forEach((v, i) => {
+      const p = project(v, cx, cy, scale);
+      ctx.beginPath();
+      ctx.arc(p[0], p[1], i === 0 ? 8 : 6, 0, Math.PI*2);
+      ctx.fillStyle = dotColors[i];
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      if (i > 0 && labels[i]) {
+        ctx.font = 'bold 11px PingFang TC, sans-serif';
+        ctx.fillStyle = dotColors[i];
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(labels[i], p[0], p[1] - 10);
+      }
+    });
+
+    // Center label
+    const cp = project([0, 0, 0], cx, cy, scale);
+    ctx.font = 'bold 13px PingFang TC, sans-serif';
+    ctx.fillStyle = 'rgba(140,60,40,0.7)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('意義', cp[0], cp[1] - 8);
+    ctx.fillText('危機', cp[0], cp[1] + 8);
+
+    angle += 0.008;
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── Tabs ──
+function switchTab(id) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector(`[onclick="switchTab('${id}')"]`).classList.add('active');
+  document.getElementById(`tab-${id}`).classList.add('active');
+  if (id === 'mindmap') drawMindMap();
+}
+
+// ── Stance ──
+const stanceTexts = {
+  a: '你傾向無神論/理性主義立場。重視認識論誠實，即使面對更高的存在焦慮。思考：你有沒有找到信仰以外的意義來源？',
+  c: '你傾向從信仰出發思考。思考：你如何回應精神醫學的功能性詮釋——它是否貶低了你信仰的真實性？',
+  p: '你傾向功能主義視角。思考：若「有益的虛幻」是可接受的，這個標準在哪裡停止？它是否適用於其他領域？'
+};
+
+function selectStance(type, btn) {
+  document.querySelectorAll('.stance-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const result = document.getElementById('stance-result');
+  result.textContent = stanceTexts[type];
+  result.style.display = 'block';
+  localStorage.setItem('faith-stance', type);
+}
+
+// ── Notes ──
+function saveNotes() {
+  localStorage.setItem('faith-notes', document.getElementById('notes-area').value);
+  const msg = document.getElementById('notes-msg');
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 2000);
+}
+
+function clearNotes() {
+  if (confirm('確定清除筆記？')) {
+    document.getElementById('notes-area').value = '';
+    localStorage.removeItem('faith-notes');
+  }
+}
+
+function copyNotes() {
+  navigator.clipboard.writeText(document.getElementById('notes-area').value);
+}
+
+function addToNotes(card) {
+  const area = document.getElementById('notes-area');
+  const qnum = card.querySelector('.q-num').textContent;
+  const text = card.textContent.replace(qnum, '').trim();
+  area.value += `\n[${qnum}]\n${text}\n我的想法：\n\n`;
+  area.focus();
+}
+
+// ── Toggle concept ──
+function toggleConcept(el) { el.classList.toggle('open'); }
+
+// ── Mind Map ──
+function drawMindMap() {
+  const canvas = document.getElementById('mindmap');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+  const W = canvas.width, H = canvas.height;
+
+  const nodes = [
+    { id: 'center', x: W/2, y: H/2, label: '信仰與\n意義危機', color: '#c05888', r: 40, bold: true },
+    { id: 'atheist', x: W*0.15, y: H*0.28, label: '無神論', color: '#c04040', r: 28 },
+    { id: 'christian', x: W*0.85, y: H*0.28, label: '基督信仰', color: '#3878b8', r: 28 },
+    { id: 'psych', x: W*0.5, y: H*0.1, label: '精神醫學', color: '#2a8a5a', r: 28 },
+    { id: 'meaning', x: W*0.15, y: H*0.72, label: '意義感', color: '#b07030', r: 22 },
+    { id: 'death', x: W*0.5, y: H*0.88, label: '死亡焦慮', color: '#a05040', r: 22 },
+    { id: 'community', x: W*0.85, y: H*0.72, label: '社群歸屬', color: '#508090', r: 22 },
+    { id: 'science', x: W*0.06, y: H*0.52, label: '科學理性', color: '#c04040', r: 18 },
+    { id: 'god', x: W*0.93, y: H*0.52, label: '上帝論證', color: '#3878b8', r: 18 },
+    { id: 'pmt', x: W*0.72, y: H*0.88, label: 'TMT理論', color: '#2a8a5a', r: 18 },
+  ];
+
+  const edges = [
+    ['center','atheist'],['center','christian'],['center','psych'],
+    ['center','meaning'],['center','death'],['center','community'],
+    ['atheist','science'],['atheist','meaning'],
+    ['christian','god'],['christian','community'],
+    ['psych','death'],['psych','pmt'],['psych','meaning'],
+    ['meaning','death'],
+  ];
+
+  edges.forEach(([a, b]) => {
+    const na = nodes.find(n => n.id === a);
+    const nb = nodes.find(n => n.id === b);
+    ctx.beginPath();
+    ctx.moveTo(na.x, na.y);
+    ctx.lineTo(nb.x, nb.y);
+    ctx.strokeStyle = 'rgba(180,100,60,0.18)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+
+  nodes.forEach(n => {
+    // Shadow
+    ctx.beginPath();
+    ctx.arc(n.x + 2, n.y + 3, n.r, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(0,0,0,0.06)';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r, 0, Math.PI*2);
+    ctx.fillStyle = n.color + '18';
+    ctx.fill();
+    ctx.strokeStyle = n.color;
+    ctx.lineWidth = n.bold ? 2.5 : 1.8;
+    ctx.stroke();
+
+    ctx.fillStyle = n.color;
+    ctx.font = `${n.bold ? 'bold ' : ''}${n.r > 30 ? 12 : 10}px PingFang TC, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const lines = n.label.split('\n');
+    lines.forEach((line, i) => {
+      const offset = (i - (lines.length-1)/2) * 14;
+      ctx.fillText(line, n.x, n.y + offset);
+    });
+  });
+}
+
+// ── Init ──
+window.onload = () => {
+  const notes = localStorage.getItem('faith-notes');
+  if (notes) document.getElementById('notes-area').value = notes;
+  const stance = localStorage.getItem('faith-stance');
+  if (stance) {
+    const btn = document.querySelector(`.stance-btn.${stance}`);
+    if (btn) selectStance(stance, btn);
+  }
+};
+</script>
+</body>
+</html>

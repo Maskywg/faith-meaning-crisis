@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>信仰光譜問卷 — 你站在哪裡？</title>
+<style>
+  :root {
+    --bg: #fdf0ec;
+    --bg2: #fce8e2;
+    --surface: #fff8f6;
+    --surface2: #fdeee9;
+    --border: #f0c8be;
+    --text: #3a2420;
+    --text-muted: #9a6560;
+    --atheist: #c04040;
+    --christian: #3878b8;
+    --psychiatrist: #2a8a5a;
+    --accent: #c05888;
+    --gold: #b07030;
+    --peach: #f4a080;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'PingFang TC', 'Noto Sans TC', sans-serif;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* Hero */
+  .hero {
+    background: linear-gradient(160deg, #fce4dc 0%, #fad0c8 50%, #f8c0b8 100%);
+    padding: 2.5rem 1.5rem 2rem;
+    text-align: center;
+    border-bottom: 1.5px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,180,160,0.3), transparent 70%);
+    top: -80px; right: -60px;
+    animation: pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes pulse { 0%,100%{transform:scale(1);opacity:0.6} 50%{transform:scale(1.1);opacity:1} }
+
+  .hero h1 { font-size: clamp(1.3rem, 3vw, 2rem); font-weight: 800; color: #6a1a10; margin-bottom: 0.5rem; }
+  .hero p { color: #a05040; font-size: 0.92rem; margin-bottom: 1rem; }
+
+  .back-link {
+    display: inline-block;
+    padding: 0.35rem 1rem;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: rgba(255,255,255,0.6);
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .back-link:hover { background: white; color: var(--text); }
+
+  /* Progress */
+  .progress-bar-wrap {
+    max-width: 700px;
+    margin: 1.5rem auto 0;
+    padding: 0 1.5rem;
+  }
+
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .progress-track {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--peach), var(--accent));
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+
+  /* Main */
+  .main {
+    max-width: 700px;
+    margin: 2rem auto;
+    padding: 0 1.5rem 4rem;
+  }
+
+  /* Section headers */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 2.5rem 0 1.2rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .section-icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .section-header h2 {
+    font-size: 1rem;
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .section-header p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  /* Question card */
+  .q-wrap {
+    margin-bottom: 1.2rem;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 1.1rem 1.2rem;
+    box-shadow: 0 2px 10px rgba(180,80,40,0.05);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .q-wrap.answered {
+    border-color: rgba(192,88,136,0.3);
+    box-shadow: 0 2px 12px rgba(192,88,136,0.08);
+  }
+
+  .q-num {
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.4rem;
+    color: var(--text-muted);
+  }
+
+  .q-text {
+    font-size: 0.93rem;
+    color: var(--text);
+    line-height: 1.6;
+    margin-bottom: 0.9rem;
+  }
+
+  /* Likert scale */
+  .likert {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.4rem;
+  }
+
+  .likert-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    margin-top: 0.35rem;
+    padding: 0 2px;
+  }
+
+  .likert input[type=radio] { display: none; }
+
+  .likert label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 38px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.18s;
+    user-select: none;
+  }
+
+  .likert label:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(192,88,136,0.06);
+    transform: translateY(-1px);
+  }
+
+  .likert input[type=radio]:checked + label {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    box-shadow: 0 3px 10px rgba(192,88,136,0.3);
+    transform: translateY(-2px);
+  }
+
+  /* Submit */
+  .submit-area {
+    text-align: center;
+    margin-top: 2.5rem;
+  }
+
+  .submit-btn {
+    padding: 0.9rem 2.5rem;
+    background: linear-gradient(135deg, var(--accent), #e07060);
+    border: none;
+    border-radius: 50px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 6px 24px rgba(192,88,136,0.3);
+    transition: all 0.25s;
+  }
+
+  .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(192,88,136,0.4); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .submit-hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.6rem; }
+  .unanswered-msg { color: var(--atheist); font-size: 0.85rem; margin-top: 0.5rem; display: none; }
+
+  /* ── RESULT ── */
+  #result-section { display: none; }
+
+  .result-hero {
+    background: linear-gradient(135deg, #fce4dc, #fce0f0);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 1.8rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 20px rgba(180,80,40,0.08);
+  }
+
+  .result-hero h2 { font-size: 1.2rem; color: #6a1a10; margin-bottom: 0.3rem; }
+  .result-hero .subtitle { font-size: 0.88rem; color: var(--text-muted); }
+
+  /* Triangle plot */
+  #triangle-canvas {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+  }
+
+  /* Score bars */
+  .score-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    margin: 1.5rem 0;
+  }
+
+  .score-row { }
+  .score-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.3rem;
+  }
+  .score-name { font-size: 0.88rem; font-weight: 700; }
+  .score-pct { font-size: 0.88rem; font-weight: 700; }
+  .score-track {
+    height: 10px;
+    background: var(--surface2);
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .score-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 1s ease;
+  }
+
+  /* Speaker comparison */
+  .compare-panel {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 1.3rem;
+    margin-top: 1.5rem;
+  }
+
+  .compare-panel h3 {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--gold);
+    margin-bottom: 1rem;
+  }
+
+  .compare-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .compare-row:last-child { border-bottom: none; }
+
+  .speaker-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .speaker-name { font-size: 0.88rem; font-weight: 700; min-width: 80px; }
+  .speaker-bar-wrap { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+  .speaker-mini-bar { display: flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; color: var(--text-muted); }
+  .speaker-mini-fill { height: 5px; border-radius: 3px; transition: width 1.2s ease; flex-shrink: 0; }
+
+  /* Insight */
+  .insight-box {
+    background: linear-gradient(135deg, rgba(192,88,136,0.07), rgba(176,112,48,0.07));
+    border: 1.5px solid rgba(192,88,136,0.2);
+    border-radius: 12px;
+    padding: 1.1rem 1.2rem;
+    margin-top: 1.5rem;
+  }
+
+  .insight-box .label { font-size: 0.72rem; font-weight: 800; color: var(--accent); letter-spacing: 0.08em; margin-bottom: 0.4rem; }
+  .insight-box p { font-size: 0.88rem; color: var(--text); line-height: 1.75; }
+
+  .redo-btn {
+    display: block;
+    margin: 2rem auto 0;
+    padding: 0.7rem 2rem;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 50px;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .redo-btn:hover { background: var(--bg2); color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <a href="index.html" class="back-link">← 返回學習筆記</a>
+  <h1 style="margin-top:1rem;">你的信仰光譜落在哪裡？</h1>
+  <p>30 道問題 · 答完後與三位主講人比較位置</p>
+</div>
+
+<div class="progress-bar-wrap">
+  <div class="progress-meta">
+    <span id="progress-text">已回答 0 / 30 題</span>
+    <span id="progress-pct">0%</span>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+  </div>
+</div>
+
+<div class="main" id="quiz-section">
+
+  <!-- Section A -->
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(192,64,64,0.12);">🔴</div>
+    <div>
+      <h2>第一部分：存在與認識論</h2>
+      <p>關於神的存在、知識的本質與理性的邊界</p>
+    </div>
+  </div>
+
+  <!-- Q1-10 -->
+  <div id="qs-1-10"></div>
+
+  <!-- Section B -->
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(56,120,184,0.12);">🔵</div>
+    <div>
+      <h2>第二部分：意義、道德與永恆</h2>
+      <p>關於生命意義的來源、道德基礎與死亡的回應</p>
+    </div>
+  </div>
+
+  <div id="qs-11-20"></div>
+
+  <!-- Section C -->
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(42,138,90,0.12);">🟢</div>
+    <div>
+      <h2>第三部分：功能、心理與社群</h2>
+      <p>關於信仰的心理效益、社會功能與現代替代方案</p>
+    </div>
+  </div>
+
+  <div id="qs-21-30"></div>
+
+  <div class="submit-area">
+    <button class="submit-btn" id="submit-btn" onclick="submitQuiz()">查看我的信仰光譜 →</button>
+    <div class="submit-hint">共 30 題，請全部作答後送出</div>
+    <div class="unanswered-msg" id="unanswered-msg"></div>
+  </div>
+</div>
+
+<!-- Result -->
+<div class="main" id="result-section">
+  <div class="result-hero">
+    <h2 id="result-title">你的信仰光譜</h2>
+    <div class="subtitle" id="result-subtitle"></div>
+  </div>
+
+  <!-- Triangle -->
+  <canvas id="triangle-canvas" width="500" height="440"></canvas>
+
+  <!-- Score bars -->
+  <div class="score-bars" id="score-bars"></div>
+
+  <!-- Speaker comparison -->
+  <div class="compare-panel">
+    <h3>與三位主講人的光譜比較</h3>
+    <div id="compare-rows"></div>
+  </div>
+
+  <!-- Insight -->
+  <div class="insight-box">
+    <div class="label">你的光譜解讀</div>
+    <p id="insight-text"></p>
+  </div>
+
+  <button class="redo-btn" onclick="redoQuiz()">重新作答</button>
+</div>
+
+<script>
+// ── Questions ──
+// Each question: { text, weight: {a, c, p} }
+// weight = contribution to each speaker's score when answer = 5 (strongly agree)
+// Reverse scored if weight is negative
+
+const questions = [
+  // Section A: Existence & Epistemology (Q1-10)
+  { text: '宇宙的存在不需要一個創造者或設計者來解釋。', w: {a:2, c:-2, p:0} },
+  { text: '我認為接受沒有足夠證據的信念，在認識論上是一種錯誤。', w: {a:2, c:-1, p:0.5} },
+  { text: '科學方法是人類理解現實最可靠、最根本的工具。', w: {a:2, c:-0.5, p:0.5} },
+  { text: '宇宙的精密結構與秩序，暗示著某種有智慧的起源。', w: {a:-2, c:2, p:0} },
+  { text: '靈性或宗教體驗是真實的，無法被完全化約為神經活動。', w: {a:-1.5, c:2, p:0.5} },
+  { text: '我寧願承受存在的焦慮，也不願相信一個無法驗證的真理。', w: {a:2, c:-1.5, p:-0.5} },
+  { text: '哲學論證（如本體論論證）可以為神的存在提供有效支持。', w: {a:-1.5, c:2, p:0} },
+  { text: '「我不知道」是面對終極問題最誠實的答案。', w: {a:1, c:-0.5, p:1.5} },
+  { text: '無論神是否存在，人類都應該根據自己的理性獨立建構意義。', w: {a:1.5, c:-1, p:1} },
+  { text: '超自然現象若無法被重複驗證，就不應被視為可靠的知識來源。', w: {a:2, c:-1.5, p:0.5} },
+
+  // Section B: Meaning, Morality & Eternity (Q11-20)
+  { text: '若沒有一個客觀的神，道德規範最終只是人類的主觀約定。', w: {a:-1.5, c:2, p:-0.5} },
+  { text: '對於死亡後的永生或復活的盼望，給了我的生命最深刻的意義。', w: {a:-2, c:2, p:0} },
+  { text: '人生的意義必須由個人自行創造，而非由外部力量賦予。', w: {a:2, c:-1.5, p:0.5} },
+  { text: '愛、美與道德善，指向一個超越純粹物質世界的實在。', w: {a:-1.5, c:2, p:0.5} },
+  { text: '若神不存在，一切在終極意義上都是虛無的——這讓我感到困擾。', w: {a:-1, c:1.5, p:1} },
+  { text: '面對死亡是終點這個現實，是一種需要培養的心理能力，而非需要迴避的問題。', w: {a:1.5, c:-0.5, p:1.5} },
+  { text: '帕斯卡賭注（相信神的風險比不相信低）對我有一定的說服力。', w: {a:-2, c:1.5, p:0.5} },
+  { text: '有宗教信仰的社會，往往擁有比世俗社會更強大的道德凝聚力。', w: {a:-1, c:2, p:0.5} },
+  { text: '「死後什麼都沒有」這個想法，讓生命當下的每一刻變得更珍貴。', w: {a:2, c:-0.5, p:1} },
+  { text: '存在主義式的「在荒謬中創造意義」對我比宗教敘事更有說服力。', w: {a:2, c:-2, p:0.5} },
+
+  // Section C: Function, Psychology & Community (Q21-30)
+  { text: '信仰是否「在形上學上為真」，不如它是否帶來心理健康效益重要。', w: {a:-0.5, c:-1, p:2.5} },
+  { text: '宗教儀式和象徵（祈禱、彌撒、祭祖）在心理上有實質的撫慰效果。', w: {a:0, c:1, p:2} },
+  { text: '人類大腦天生就有需要意義感的傾向，這是演化的產物。', w: {a:1, c:-0.5, p:2} },
+  { text: '若一個「善意的信念」能顯著改善一個人的心理健康，採用它是合理的。', w: {a:-1, c:0.5, p:2.5} },
+  { text: '評估一個信仰體系，最重要的是看它對個人與社會的實際影響。', w: {a:0.5, c:0, p:2.5} },
+  { text: '信仰社群（教會、廟宇、清真寺）是人類最強大的社會支持系統之一。', w: {a:0, c:1, p:2} },
+  { text: '失去信仰後所引發的心理危機，本身就說明信仰有其不可替代的心理功能。', w: {a:0, c:0.5, p:2.5} },
+  { text: '意義感可以是「建構」出來的，不需要是「發現」一個客觀真理。', w: {a:1, c:-1, p:2} },
+  { text: '我更關心一個信念對我是否「有用、有益」，而非它是否「符合事實」。', w: {a:-1, c:0, p:2.5} },
+  { text: '無論神學立場為何，定期反思生命意義對心理健康至關重要。', w: {a:0.5, c:0.5, p:2} },
+];
+
+// Speaker profiles (A/C/P raw scores on their own 30-question set, normalized)
+const speakers = {
+  a: { name: '無神論者', color: '#c04040', scores: {a: 85, c: 10, p: 30} },
+  c: { name: '基督徒',   color: '#3878b8', scores: {a: 12, c: 88, p: 35} },
+  p: { name: '精神科醫師', color: '#2a8a5a', scores: {a: 40, c: 25, p: 82} },
+};
+
+// ── Render questions ──
+function renderQs(containerId, start, end) {
+  const container = document.getElementById(containerId);
+  for (let i = start; i <= end; i++) {
+    const q = questions[i-1];
+    container.innerHTML += `
+      <div class="q-wrap" id="qwrap-${i}">
+        <div class="q-num">Q${i}</div>
+        <div class="q-text">${q.text}</div>
+        <div class="likert">
+          ${[1,2,3,4,5].map(v => `
+            <div>
+              <input type="radio" name="q${i}" id="q${i}v${v}" value="${v}" onchange="onAnswer(${i})">
+              <label for="q${i}v${v}">${v}</label>
+            </div>
+          `).join('')}
+        </div>
+        <div class="likert-label-row">
+          <span>完全不同意</span>
+          <span>完全同意</span>
+        </div>
+      </div>
+    `;
+  }
+}
+
+renderQs('qs-1-10', 1, 10);
+renderQs('qs-11-20', 11, 20);
+renderQs('qs-21-30', 21, 30);
+
+// ── Progress ──
+function onAnswer(qn) {
+  document.getElementById(`qwrap-${qn}`).classList.add('answered');
+  updateProgress();
+}
+
+function updateProgress() {
+  let answered = 0;
+  for (let i = 1; i <= 30; i++) {
+    if (document.querySelector(`input[name="q${i}"]:checked`)) answered++;
+  }
+  const pct = Math.round(answered / 30 * 100);
+  document.getElementById('progress-text').textContent = `已回答 ${answered} / 30 題`;
+  document.getElementById('progress-pct').textContent = `${pct}%`;
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+// ── Submit ──
+function submitQuiz() {
+  const unanswered = [];
+  for (let i = 1; i <= 30; i++) {
+    if (!document.querySelector(`input[name="q${i}"]:checked`)) unanswered.push(i);
+  }
+
+  if (unanswered.length > 0) {
+    const msg = document.getElementById('unanswered-msg');
+    msg.textContent = `尚有 ${unanswered.length} 題未作答：第 ${unanswered.slice(0,5).join('、')}${unanswered.length > 5 ? '……' : ''} 題`;
+    msg.style.display = 'block';
+    const firstQ = document.getElementById(`qwrap-${unanswered[0]}`);
+    firstQ.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    firstQ.style.borderColor = '#e07060';
+    setTimeout(() => firstQ.style.borderColor = '', 2000);
+    return;
+  }
+
+  // Calculate scores
+  let rawA = 0, rawC = 0, rawP = 0;
+  for (let i = 1; i <= 30; i++) {
+    const val = parseInt(document.querySelector(`input[name="q${i}"]:checked`).value);
+    const w = questions[i-1].w;
+    rawA += val * w.a;
+    rawC += val * w.c;
+    rawP += val * w.p;
+  }
+
+  // Shift to positive & normalize
+  const minVal = Math.min(rawA, rawC, rawP);
+  const shift = minVal < 0 ? -minVal + 5 : 0;
+  const posA = rawA + shift;
+  const posC = rawC + shift;
+  const posP = rawP + shift;
+  const total = posA + posC + posP;
+  const pA = posA / total;
+  const pC = posC / total;
+  const pP = posP / total;
+
+  showResult(pA, pC, pP, rawA, rawC, rawP);
+}
+
+// ── Result ──
+function showResult(pA, pC, pP, rawA, rawC, rawP) {
+  document.getElementById('quiz-section').style.display = 'none';
+  const rs = document.getElementById('result-section');
+  rs.style.display = 'block';
+
+  // Title
+  const dominant = pA > pC && pA > pP ? 'a' : (pC > pA && pC > pP ? 'c' : 'p');
+  const titles = {
+    a: ['傾向理性主義', '你的思考方式更接近無神論/存在主義立場'],
+    c: ['傾向信仰導向', '你的思考方式更接近有神論/基督信仰立場'],
+    p: ['傾向功能主義', '你的思考方式更接近精神醫學/功能主義立場'],
+  };
+  document.getElementById('result-title').textContent = titles[dominant][0];
+  document.getElementById('result-subtitle').textContent = titles[dominant][1];
+
+  // Draw triangle
+  drawTriangle(pA, pC, pP);
+
+  // Score bars
+  const pcts = {
+    a: Math.round(pA * 100),
+    c: Math.round(pC * 100),
+    p: Math.round(pP * 100),
+  };
+
+  document.getElementById('score-bars').innerHTML = `
+    <div class="score-row">
+      <div class="score-label">
+        <span class="score-name" style="color:var(--atheist)">🔴 無神論/理性主義傾向</span>
+        <span class="score-pct" style="color:var(--atheist)">${pcts.a}%</span>
+      </div>
+      <div class="score-track"><div class="score-fill" style="width:${pcts.a}%;background:var(--atheist);"></div></div>
+    </div>
+    <div class="score-row">
+      <div class="score-label">
+        <span class="score-name" style="color:var(--christian)">🔵 信仰/有神論傾向</span>
+        <span class="score-pct" style="color:var(--christian)">${pcts.c}%</span>
+      </div>
+      <div class="score-track"><div class="score-fill" style="width:${pcts.c}%;background:var(--christian);"></div></div>
+    </div>
+    <div class="score-row">
+      <div class="score-label">
+        <span class="score-name" style="color:var(--psychiatrist)">🟢 功能主義/心理導向傾向</span>
+        <span class="score-pct" style="color:var(--psychiatrist)">${pcts.p}%</span>
+      </div>
+      <div class="score-track"><div class="score-fill" style="width:${pcts.p}%;background:var(--psychiatrist);"></div></div>
+    </div>
+  `;
+
+  // Speaker comparison
+  const normalize = s => {
+    const t = s.a + s.c + s.p;
+    return { a: Math.round(s.a/t*100), c: Math.round(s.c/t*100), p: Math.round(s.p/t*100) };
+  };
+
+  const spkData = [
+    { key:'a', ...speakers.a },
+    { key:'c', ...speakers.c },
+    { key:'p', ...speakers.p },
+    { key:'you', name:'你', color:'#c05888', scores: { a: pcts.a, c: pcts.c, p: pcts.p } },
+  ];
+
+  document.getElementById('compare-rows').innerHTML = spkData.map(s => {
+    const n = s.key === 'you' ? s.scores : normalize(s.scores);
+    return `
+      <div class="compare-row">
+        <div class="speaker-dot" style="background:${s.color}"></div>
+        <div class="speaker-name" style="color:${s.color}">${s.name}</div>
+        <div class="speaker-bar-wrap">
+          <div class="speaker-mini-bar">
+            <div class="speaker-mini-fill" style="width:${n.a}px;max-width:${n.a}%;background:var(--atheist);min-width:2px;flex:${n.a}"></div>
+            <span>${n.a}% 理性</span>
+          </div>
+          <div class="speaker-mini-bar">
+            <div class="speaker-mini-fill" style="width:${n.c}px;max-width:${n.c}%;background:var(--christian);min-width:2px;flex:${n.c}"></div>
+            <span>${n.c}% 信仰</span>
+          </div>
+          <div class="speaker-mini-bar">
+            <div class="speaker-mini-fill" style="width:${n.p}px;max-width:${n.p}%;background:var(--psychiatrist);min-width:2px;flex:${n.p}"></div>
+            <span>${n.p}% 功能</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Insight
+  const insightMap = {
+    a: `你的回答顯示出強烈的理性主義傾向。你重視認識論的誠實，傾向以證據和邏輯作為信念的基礎，即使這意味著面對更大的存在焦慮。在三位主講人中，你的光譜位置最接近<strong>無神論者</strong>。問題值得你繼續深思：在沒有宗教敘事的情況下，你如何長期維持意義感？`,
+    c: `你的回答顯示出明顯的信仰導向傾向。你傾向認為神的存在、靈性體驗和超越性意義是真實且重要的。在三位主講人中，你的光譜位置最接近<strong>基督徒</strong>。問題值得你繼續深思：你如何回應精神科醫師對信仰「功能性解讀」——那是否削弱了你信仰的深度？`,
+    p: `你的回答顯示出功能主義傾向。你更關注信仰對心理健康、社群凝聚和意義建構的實際效益，而不僅僅是其形上學真偽。在三位主講人中，你的光譜位置最接近<strong>精神科醫師</strong>。問題值得你繼續深思：若功能是首要標準，是否所有「有用的信念」都同等合理？`,
+  };
+  document.getElementById('insight-text').innerHTML = insightMap[dominant];
+
+  rs.scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── Triangle (ternary) plot ──
+function drawTriangle(pA, pC, pP) {
+  const canvas = document.getElementById('triangle-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Triangle vertices (A=left, C=right, P=top)
+  const pad = 70;
+  const triH = (H - pad * 2) * 0.9;
+  const triW = triH / Math.tan(Math.PI / 3) * 2;
+  const cx = W / 2;
+  const topY = pad + 20;
+  const botY = topY + triH;
+
+  const vA = { x: cx - triW/2, y: botY, label: '🔴 無神論者', color: '#c04040' };
+  const vC = { x: cx + triW/2, y: botY, label: '🔵 基督徒',   color: '#3878b8' };
+  const vP = { x: cx,          y: topY, label: '🟢 精神科醫師', color: '#2a8a5a' };
+
+  // Fill triangle gradient background
+  const grd = ctx.createLinearGradient(vA.x, botY, vC.x, topY);
+  grd.addColorStop(0, 'rgba(192,64,64,0.06)');
+  grd.addColorStop(0.5, 'rgba(192,88,136,0.04)');
+  grd.addColorStop(1, 'rgba(42,138,90,0.06)');
+
+  ctx.beginPath();
+  ctx.moveTo(vA.x, vA.y);
+  ctx.lineTo(vC.x, vC.y);
+  ctx.lineTo(vP.x, vP.y);
+  ctx.closePath();
+  ctx.fillStyle = grd;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(180,80,40,0.2)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Grid lines (ternary grid at 25%, 50%, 75%)
+  ctx.strokeStyle = 'rgba(180,80,40,0.07)';
+  ctx.lineWidth = 1;
+  for (let t = 0.25; t < 1; t += 0.25) {
+    const lerpPt = (v1, v2, f) => ({ x: v1.x + (v2.x-v1.x)*f, y: v1.y + (v2.y-v1.y)*f });
+    const s1 = lerpPt(vA, vP, t), e1 = lerpPt(vC, vP, t);
+    const s2 = lerpPt(vA, vC, t), e2 = lerpPt(vP, vC, t);
+    const s3 = lerpPt(vC, vA, t), e3 = lerpPt(vP, vA, t);
+    [[s1,e1],[s2,e2],[s3,e3]].forEach(([s,e]) => {
+      ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.lineTo(e.x,e.y); ctx.stroke();
+    });
+  }
+
+  // Convert barycentric (pA, pC, pP) → cartesian
+  function bary2cart(a, c, p) {
+    return {
+      x: a * vA.x + c * vC.x + p * vP.x,
+      y: a * vA.y + c * vC.y + p * vP.y,
+    };
+  }
+
+  // Speaker positions
+  const speakerPts = [
+    { a: 0.80, c: 0.06, p: 0.14, ...speakers.a },
+    { a: 0.07, c: 0.82, p: 0.11, ...speakers.c },
+    { a: 0.22, c: 0.10, p: 0.68, ...speakers.p },
+  ];
+
+  // Draw speaker labels on vertices
+  [vA, vC, vP].forEach((v, i) => {
+    const spk = speakerPts[i];
+    ctx.font = 'bold 12px PingFang TC, sans-serif';
+    ctx.fillStyle = spk.color;
+    ctx.textAlign = 'center';
+    const offsetY = v === vP ? -18 : 22;
+    ctx.fillText(v.label, v.x, v.y + offsetY);
+  });
+
+  // Draw speaker dots
+  speakerPts.forEach(s => {
+    const pt = bary2cart(s.a, s.c, s.p);
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, 9, 0, Math.PI*2);
+    ctx.fillStyle = s.color + '33';
+    ctx.fill();
+    ctx.strokeStyle = s.color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.font = '9px PingFang TC, sans-serif';
+    ctx.fillStyle = s.color;
+    ctx.textAlign = 'center';
+    ctx.fillText(s.name, pt.x, pt.y - 13);
+  });
+
+  // User position
+  const userPt = bary2cart(pA, pC, pP);
+
+  // Ripple effect
+  for (let r = 30; r >= 10; r -= 10) {
+    ctx.beginPath();
+    ctx.arc(userPt.x, userPt.y, r, 0, Math.PI*2);
+    ctx.strokeStyle = `rgba(192,88,136,${0.06 + (30-r)*0.01})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // User dot
+  ctx.beginPath();
+  ctx.arc(userPt.x, userPt.y, 12, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(192,88,136,0.18)';
+  ctx.fill();
+  ctx.strokeStyle = '#c05888';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(userPt.x, userPt.y, 5, 0, Math.PI*2);
+  ctx.fillStyle = '#c05888';
+  ctx.fill();
+
+  // User label
+  const labelY = userPt.y > (topY + botY) / 2 ? userPt.y - 22 : userPt.y + 24;
+  ctx.font = 'bold 13px PingFang TC, sans-serif';
+  ctx.fillStyle = '#c05888';
+  ctx.textAlign = 'center';
+  ctx.fillText('你在這裡', userPt.x, labelY);
+
+  // Dashed lines to corners
+  ctx.setLineDash([3, 4]);
+  ctx.lineWidth = 1;
+  speakerPts.forEach(s => {
+    const spt = bary2cart(s.a, s.c, s.p);
+    ctx.beginPath();
+    ctx.moveTo(userPt.x, userPt.y);
+    ctx.lineTo(spt.x, spt.y);
+    ctx.strokeStyle = s.color + '40';
+    ctx.stroke();
+  });
+  ctx.setLineDash([]);
+
+  // Legend bar at bottom
+  const legendY = H - 22;
+  ctx.font = '10px PingFang TC, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(154,101,96,0.7)';
+  ctx.fillText('三角圖中的位置代表你在三種思維傾向之間的相對比重', W/2, legendY);
+}
+
+// ── Redo ──
+function redoQuiz() {
+  document.getElementById('result-section').style.display = 'none';
+  document.getElementById('quiz-section').style.display = 'block';
+  for (let i = 1; i <= 30; i++) {
+    const checked = document.querySelector(`input[name="q${i}"]:checked`);
+    if (checked) checked.checked = false;
+    document.getElementById(`qwrap-${i}`).classList.remove('answered');
+    document.getElementById(`qwrap-${i}`).style.borderColor = '';
+  }
+  document.getElementById('progress-fill').style.width = '0%';
+  document.getElementById('progress-text').textContent = '已回答 0 / 30 題';
+  document.getElementById('progress-pct').textContent = '0%';
+  document.getElementById('unanswered-msg').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

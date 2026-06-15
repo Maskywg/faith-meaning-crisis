@@ -684,20 +684,16 @@
 
     <div class="panel">
       <h2>✏️ 思考筆記</h2>
-      <textarea id="notes-area" placeholder="在這裡記下你的想法、問題、反駁……
-
-點擊「核心問題」中的卡片可快速加入。
-
-📝 提示：
-• 哪個論點最觸動你？
-• 你不同意哪一方的論點？
-• 這對你個人的信仰觀有何影響？"></textarea>
-      <div class="notes-actions">
-        <button class="btn primary" onclick="saveNotes()">💾 儲存</button>
-        <button class="btn" onclick="clearNotes()">清除</button>
-        <button class="btn" onclick="copyNotes()">複製</button>
+      <textarea id="notes-input" placeholder="輸入你的想法……（點擊「核心問題」中的卡片可快速帶入）" style="width:100%;min-height:90px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:0.75rem;color:var(--text);font-family:inherit;font-size:0.86rem;line-height:1.7;resize:vertical;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      <div style="display:flex;gap:0.5rem;margin-top:0.6rem;">
+        <button class="btn primary" onclick="addNote()" style="flex:1;">➕ 新增筆記</button>
+        <button class="btn" onclick="downloadNotes()">⬇ 下載</button>
+        <button class="btn" onclick="clearAllNotes()">清除全部</button>
       </div>
-      <div id="notes-msg" style="font-size:0.76rem;color:var(--psychiatrist);margin-top:0.35rem;display:none;">✓ 已儲存至本地</div>
+
+      <!-- Notes list -->
+      <div id="notes-list" style="margin-top:1rem;display:flex;flex-direction:column;gap:0.5rem;max-height:320px;overflow-y:auto;"></div>
+      <div id="notes-empty" style="font-size:0.8rem;color:var(--text-muted);text-align:center;padding:1rem 0;display:block;">尚無筆記，開始記錄你的想法吧</div>
     </div>
 
     <div class="panel">
@@ -882,30 +878,77 @@ function selectStance(type, btn) {
 }
 
 // ── Notes ──
-function saveNotes() {
-  localStorage.setItem('faith-notes', document.getElementById('notes-area').value);
-  const msg = document.getElementById('notes-msg');
-  msg.style.display = 'block';
-  setTimeout(() => msg.style.display = 'none', 2000);
+let notesList = JSON.parse(localStorage.getItem('faith-notes-list') || '[]');
+
+function renderNotes() {
+  const list = document.getElementById('notes-list');
+  const empty = document.getElementById('notes-empty');
+  list.innerHTML = '';
+  if (notesList.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  notesList.forEach((note, i) => {
+    const el = document.createElement('div');
+    el.style.cssText = 'background:var(--surface2);border:1.5px solid var(--border);border-left:3px solid var(--peach);border-radius:8px;padding:0.65rem 0.8rem;position:relative;';
+    el.innerHTML = `
+      <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.3rem;">${note.tag ? `<span style="color:var(--accent);font-weight:700;">${note.tag}</span> · ` : ''}${note.time}</div>
+      <div style="font-size:0.85rem;color:var(--text);white-space:pre-wrap;line-height:1.6;">${note.text}</div>
+      <button onclick="deleteNote(${i})" style="position:absolute;top:0.4rem;right:0.5rem;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.9rem;padding:0 0.2rem;" title="刪除">×</button>
+    `;
+    list.appendChild(el);
+  });
+  list.scrollTop = list.scrollHeight;
 }
 
-function clearNotes() {
-  if (confirm('確定清除筆記？')) {
-    document.getElementById('notes-area').value = '';
-    localStorage.removeItem('faith-notes');
+function addNote(tag, prefill) {
+  const input = document.getElementById('notes-input');
+  const text = (prefill || input.value).trim();
+  if (!text) return;
+  const now = new Date();
+  const time = now.toLocaleTimeString('zh-TW', { hour:'2-digit', minute:'2-digit' });
+  notesList.push({ text, tag: tag || '', time });
+  localStorage.setItem('faith-notes-list', JSON.stringify(notesList));
+  input.value = '';
+  renderNotes();
+}
+
+function deleteNote(i) {
+  notesList.splice(i, 1);
+  localStorage.setItem('faith-notes-list', JSON.stringify(notesList));
+  renderNotes();
+}
+
+function clearAllNotes() {
+  if (notesList.length === 0) return;
+  if (confirm('確定清除所有筆記？')) {
+    notesList = [];
+    localStorage.removeItem('faith-notes-list');
+    renderNotes();
   }
 }
 
-function copyNotes() {
-  navigator.clipboard.writeText(document.getElementById('notes-area').value);
+function downloadNotes() {
+  if (notesList.length === 0) { alert('尚無筆記可下載'); return; }
+  const header = '沒有信仰真的弊大於利嗎？— 思考筆記\n' + '='.repeat(40) + '\n\n';
+  const body = notesList.map((n, i) =>
+    `[${i+1}] ${n.tag ? n.tag + ' · ' : ''}${n.time}\n${n.text}`
+  ).join('\n\n' + '-'.repeat(30) + '\n\n');
+  const blob = new Blob([header + body], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '信仰意義危機筆記.txt';
+  a.click();
 }
 
 function addToNotes(card) {
-  const area = document.getElementById('notes-area');
   const qnum = card.querySelector('.q-num').textContent;
   const text = card.textContent.replace(qnum, '').trim();
-  area.value += `\n[${qnum}]\n${text}\n我的想法：\n\n`;
-  area.focus();
+  const input = document.getElementById('notes-input');
+  input.value = `[${qnum}] ${text}\n\n我的想法：`;
+  input.focus();
+  input.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 // ── Toggle concept ──
@@ -981,13 +1024,16 @@ function drawMindMap() {
 
 // ── Init ──
 window.onload = () => {
-  const notes = localStorage.getItem('faith-notes');
-  if (notes) document.getElementById('notes-area').value = notes;
+  renderNotes();
   const stance = localStorage.getItem('faith-stance');
   if (stance) {
     const btn = document.querySelector(`.stance-btn.${stance}`);
     if (btn) selectStance(stance, btn);
   }
+  // Enter key in textarea = submit
+  document.getElementById('notes-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) addNote();
+  });
 };
 </script>
 </body>
